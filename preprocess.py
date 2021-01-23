@@ -50,13 +50,8 @@ class PreProcess():
             regionHeight = maximumRow - minimumRow
             regionWidth = maximumCol - minimumCol
             if minHeight <= regionHeight <= maxHeight and minWidth <= regionWidth <= maxWidth and regionWidth > regionHeight:
-                print("proooooooooooooops")
-                print(region.coords)
-                print(region.coords.shape)
                 plate_like_objects.append(self.originalImage[minimumRow:maximumRow,
-                                                             minimumCol:maximumCol])
-            print("getplatelikeobjects")
-            print(plate_like_objects)
+                                                            minimumCol:maximumCol])
         if len(plate_like_objects) == 0: # if plate_like_object does not found in the above process
             self.findContours(plate_like_objects)
 
@@ -74,16 +69,12 @@ class PreProcess():
             average = float(total_white_pixels) / width
             if average >= highest_average:
                 license_plate = c
-        
         return license_plate
 
     def findContours(self, plate_like_objects):
-
         cnts = cv2.findContours(self.binaryImage.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:10]
-        print("findContours")
-
         for c in cnts:
             (x, y, w, h) = cv2.boundingRect(c)
             ar = w / float(h)
@@ -93,12 +84,9 @@ class PreProcess():
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
                 img = cv2.drawContours(self.originalImage,[box],0,(0,0,225),2)
-                # cv2.imshow("im",img)
-                # #cv2.imwrite("images/result.png", img)
-                # cv2.waitKey(0)
                 plate_like_objects.append(self.originalImage[ y: y+h , x: x+w])
                 break
-            
+
     def getGradX(self, blackhat):
         gradX = cv2.Sobel(blackhat, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=-1)
         gradX = np.absolute(gradX)

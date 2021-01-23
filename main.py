@@ -4,12 +4,13 @@ import numpy as np
 import pytesseract
 import time
 
-def build_tesseract_options(psm=7):
+def build_tesseract_options(psm=8, oem=3):
         # tell Tesseract to only OCR alphanumeric characters
         alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         options = "-c tessedit_char_whitelist={}".format(alphanumeric)
         # set the PSM mode
         options += " --psm {}".format(psm)
+        options += " --oem {}".format(oem)
         # return the built options string
         return options
 
@@ -24,7 +25,7 @@ def license_plate_extract(plate_like_objects, preprocess):
         return license_plate
 
 
-img = cv2.imread("dataset1/040603/0003.jpg", cv2.IMREAD_GRAYSCALE)  # read as grayscale
+img = cv2.imread("dataset1/040603/0012.jpg", cv2.IMREAD_GRAYSCALE)  # read as grayscale
 cv2.imshow("original image", img)
 cv2.waitKey(0)
 
@@ -44,8 +45,25 @@ else:
     if len(license_plate) == 0:
         print("Error")
     else:
+        print("girdi")
         options = build_tesseract_options()
-        license_plate_text = pytesseract.image_to_string(license_plate, config=options)
+
+        blur = cv2.GaussianBlur(license_plate, (3,3), 0)
+        thresh = cv2.threshold(blur, 0, 255,
+                                    cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        cv2.imshow("thresh", thresh)
+        cv2.waitKey(0)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+        invert = 255 - opening
+        
+        cv2.imshow('thresh', thresh)
+        cv2.imshow('opening', opening)
+        cv2.imshow('invert', invert)
+        cv2.waitKey()
+        
+        
+        license_plate_text = pytesseract.image_to_string(invert, config=options)
         print(license_plate_text)
 
 
